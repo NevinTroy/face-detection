@@ -16,7 +16,7 @@ const app=new Clarifai.App({
 });
 
 const particlesOptions={
-  particles:{
+  particles:{   
     number:{
       value:100,
       density:{
