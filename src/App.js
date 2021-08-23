@@ -10,6 +10,7 @@ import 'react-particles-js'
 import './App.css'
 import Particles from 'react-particles-js';
 import Clarifai from 'clarifai';
+import fetch from 'node-fetch';
 
 const app=new Clarifai.App({
   apiKey:'8b62678146e8475b981e11396efd0ba1'
@@ -44,9 +45,27 @@ class App extends React.Component{
       imageURL:'',
       box:{},
       route:'signin', //route is used to track which page the user is in 
-      isSignedIn:false
+      isSignedIn:false,
+      user:{
+        id:'',
+        name:"",
+        email:"",
+        entries:0,
+        joined:''
+      }
     }
   }
+  
+  loadUser=(data)=>{
+    this.setState({user:{
+      id:data.id,
+      name:data.name,
+      email:data.email,
+      entries:data.entries,
+      joined:data.joined
+    }})
+  }
+
   onInputChange=(event)=>{
     this.setState({input:event.target.value})
   }
@@ -74,7 +93,24 @@ class App extends React.Component{
   onSubmitChange=()=>{
     this.setState({imageURL:this.state.input});
     app.models.predict(Clarifai.FACE_DETECT_MODEL,this.state.input)
-      .then(response=>this.displayFaceBox(this.calculateFaceLocation(response)))
+      .then(response=>{
+        if(response){
+          fetch('http://localhost:3000/image',{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              id:this.state.user.id
+            })
+          })
+            .then(response=>response.json())
+            .then(count=>{
+              this.setState({user:{
+                entries:count
+              }})
+            })
+        }
+        this.displayFaceBox(this.calculateFaceLocation(response))
+      })
       .catch(err=>console.log(err))
   }
   
@@ -96,14 +132,14 @@ class App extends React.Component{
           this.state.route==='home'
           ? <div>
             <Logo />
-            <Rank />
+            <Rank name={this.state.user.name} entries={this.state.user.entries} />
             <ImageForm onInputChange={this.onInputChange} onSubmitChange={this.onSubmitChange}/>
             <FaceDetection box={this.state.box}imageURL={this.state.imageURL}/>
           </div>
           :(
             this.state.route==='signin'
-            ? <SignIn onRouteChange={this.onRouteChange}/>
-            : <Register onRouteChange={this.onRouteChange}/>
+            ? <SignIn loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
+            : <Register onRouteChange={this.onRouteChange} loadUser={this.loadUser} />
           )
         }
       </div>
