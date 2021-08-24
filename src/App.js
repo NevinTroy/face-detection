@@ -96,7 +96,7 @@ class App extends React.Component{
       .then(response=>{
         if(response){
           fetch('http://localhost:3000/image',{
-            method:"POST",
+            method:"PUT",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({
               id:this.state.user.id
@@ -104,9 +104,7 @@ class App extends React.Component{
           })
             .then(response=>response.json())
             .then(count=>{
-              this.setState({user:{
-                entries:count
-              }})
+              this.setState(Object.assign(this.state.user,{entries:count}))
             })
         }
         this.displayFaceBox(this.calculateFaceLocation(response))
@@ -137,7 +135,7 @@ class App extends React.Component{
             <FaceDetection box={this.state.box}imageURL={this.state.imageURL}/>
           </div>
           :(
-            this.state.route==='signin'
+            this.state.route==='signin' || 'signout'
             ? <SignIn loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
             : <Register onRouteChange={this.onRouteChange} loadUser={this.loadUser} />
           )
